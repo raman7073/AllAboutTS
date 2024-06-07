@@ -1,0 +1,589 @@
+When it comes to choosing a networking solution for integrating multiplayer functionality into a Unity game like Ludo, both Photon and PlayFab are popular options.
+
+Photon is a widely used networking framework that provides reliable and scalable multiplayer capabilities. It offers features like matchmaking, real-time communication, and synchronization of game state across multiple devices. Photon has a strong community and extensive documentation, making it a good choice for many game developers.
+
+PlayFab, on the other hand, is a comprehensive backend platform for game development that includes multiplayer networking as one of its features. It provides a range of services like player authentication, leaderboards, and in-game economy management, in addition to multiplayer functionality. PlayFab offers a more integrated solution for game development, especially if you require additional features beyond just networking.
+
+Ultimately, the choice between Photon and PlayFab depends on your specific requirements and the complexity of your game. Consider factors such as the scale of your multiplayer implementation, the need for additional backend services, and the level of community support you prefer.
+
+Photon and Playfab are (mostly) complementary, this is why they are used together in a lot of titles.
+
+Photon: Focus on Realtime synchronous multiplayer Playfab: Focus on Backend features
+
+Matchmaking is offered by both, so it depends on the features you need. If you need realtime gameplay (after the matchmaking), then you need something like Photon.
+
+## Both Photon have a free tier (for development), but usage based pricing in case of success. Usage in Photon is measured in CCU (players connected at the same time), Playfab usage is very fine-grained. Both products are very cost efficient -- if you leverage their features.
+
+Yes, if you need to have players be aware of updates from other players in real-time, you'll need to use either Photon or a custom game server. PlayFab is a backend service for games that provides a wide range of features, but polling for updates to data every few seconds would result in a high number of calls per game session per player. Depending on what other calls are necessary to run the game session, that could easily push you into a call rate that's outside the scope of our fair use terms. In general, games that are only using the core service should aim for a few API calls per minute on average (bursts are fine, as long as the average over the lifetime of the player session works out that way).
+
+Game made using Unity 2022.3.6f1 and Photon Unity Networking for multiplayer and Playfab to store data. You don’t need server for this game.
+features:
+Made with Unity – Multiplatform
+Online multiplayer – play with Facebook friends or random player
+Create and join Private rooms
+Facebook integration – login, invite friend
+Login with Facebook or play as Guest
+Admob, integrated
+In-App products implemented
+Shop – buy new chat, emoji
+Chat over room
+In-game invites to play a game with friend
+Online status for your friends
+Coins system
+Playfab integration
+Daily fortune wheel and notifications
+Play in rooms for 2 – 4 players
+
+Unity Photon (pun2) friends invite system | Azure database to make and save friends
+
+Requirements for Ludo Game:
+
+Functional Requirements:
+
+1. Multiplayer functionality: The game should support multiplayer gameplay, allowing players to play with friends or random players.
+2. Private rooms: Players should be able to create and join private rooms to play with specific friends.
+3. Facebook integration: The game should provide the option to login with Facebook and invite friends to play.
+4. In-game chat: Players should be able to communicate with each other through a chat system within the game.
+5. In-app purchases: The game should have the ability to offer in-app products for purchase, such as new chat options or emojis.
+6. Friends invite system: The game should provide a system for inviting friends to play together.
+7. Online status: Players should be able to see the online status of their friends.
+
+Non-Functional Requirements:
+
+1. Multiplatform support: The game should be compatible with multiple platforms, such as iOS, Android, and web.
+2. Performance: The game should be optimized for smooth gameplay and minimal lag.
+3. Scalability: The game should be able to handle a large number of concurrent players without performance degradation.
+4. Security: The game should implement appropriate security measures to protect player data and prevent cheating.
+5. User-friendly interface: The game should have an intuitive and visually appealing user interface.
+6. Notifications: The game should provide notifications for daily fortune wheel spins or other important events.
+7. Integration with PlayFab: The game should integrate with PlayFab to store and manage player data.
+
+---
+
+1. To implement multiplayer functionality
+   To implement multiplayer functionality in your game, you have several options developer. Here are a few popular choices:
+
+Photon: Photon is a widely used networking framework that provides reliable and scalable multiplayer capabilities. It offers features like matchmaking, real-time communication, and synchronization of game state across multiple devices. Photon has a strong community and extensive documentation, making it a good choice for many game developers.
+free tire -> 20 CCU
+PlayFab: PlayFab is a comprehensive backend platform for game development that includes multiplayer networking as one of its features. It provides a range of services like player authentication, leaderboards, and in-game economy management, in addition to multiplayer functionality. PlayFab offers a more integrated solution for game development, especially if you require additional features beyond just networking.
+free tier -> 750 hours
+
+2. Private Room
+   using Photon.Pun;
+   using Photon.Realtime;
+
+public class RoomManager : MonoBehaviourPunCallbacks
+{
+public void CreatePrivateRoom(string roomName)
+{
+PhotonNetwork.CreateRoom(roomName, new RoomOptions { IsVisible = false, MaxPlayers = 4 });
+}
+
+    public void JoinPrivateRoom(string roomName)
+    {
+        PhotonNetwork.JoinRoom(roomName);
+    }
+
+    public override void OnCreatedRoom()
+    {
+        Debug.Log("Private room created.");
+    }
+
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        Debug.Log("Failed to create private room: " + message);
+    }
+
+    public override void OnJoinedRoom()
+    {
+        Debug.Log("Joined private room.");
+    }
+
+    public override void OnJoinRoomFailed(short returnCode, string message)
+    {
+        Debug.Log("Failed to join private room: " + message);
+    }
+
+}
+
+3. Facebook Integrations and invite
+
+using Facebook.Unity;
+
+public class FacebookManager : MonoBehaviour
+{
+private void Awake()
+{
+if (!FB.IsInitialized)
+{
+FB.Init(OnInitComplete);
+}
+else
+{
+OnInitComplete();
+}
+}
+
+    private void OnInitComplete()
+    {
+        if (FB.IsInitialized)
+        {
+            FB.ActivateApp();
+        }
+        else
+        {
+            Debug.Log("Failed to initialize Facebook SDK");
+        }
+    }
+
+    public void LoginWithFacebook()
+    {
+        FB.LogInWithReadPermissions(callback: OnLoginComplete);
+    }
+
+    private void OnLoginComplete(ILoginResult result)
+    {
+        if (FB.IsLoggedIn)
+        {
+            // Access the user's Facebook data
+            string userId = AccessToken.CurrentAccessToken.UserId;
+            string accessToken = AccessToken.CurrentAccessToken.TokenString;
+
+            // Use the user's data in your game
+            // ...
+        }
+        else
+        {
+            Debug.Log("Failed to login with Facebook");
+        }
+    }
+
+    public void InviteFriends()
+    {
+        FB.AppRequest(
+            message: "Come play my game!",
+            title: "Invite Friends",
+            callback: OnInviteComplete
+        );
+    }
+
+    private void OnInviteComplete(IAppRequestResult result)
+    {
+        if (result.Cancelled)
+        {
+            Debug.Log("Invite cancelled");
+        }
+        else if (!string.IsNullOrEmpty(result.Error))
+        {
+            Debug.Log("Error sending invite: " + result.Error);
+        }
+        else
+        {
+            Debug.Log("Invite sent successfully");
+        }
+    }
+
+}
+
+4. Keeping Data
+
+using PlayFab;
+using PlayFab.ClientModels;
+
+public class PlayerDataManager : MonoBehaviour
+{
+public void SavePlayerData(string playerName, int playerScore)
+{
+var request = new UpdateUserDataRequest
+{
+Data = new Dictionary<string, string>
+{
+{ "PlayerName", playerName },
+{ "PlayerScore", playerScore.ToString() }
+}
+};
+
+        PlayFabClientAPI.UpdateUserData(request, OnSavePlayerDataSuccess, OnSavePlayerDataFailure);
+    }
+
+    private void OnSavePlayerDataSuccess(UpdateUserDataResult result)
+    {
+        Debug.Log("Player data saved successfully");
+    }
+
+    private void OnSavePlayerDataFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to save player data: " + error.ErrorMessage);
+    }
+
+    public void LoadPlayerData()
+    {
+        var request = new GetUserDataRequest();
+
+        PlayFabClientAPI.GetUserData(request, OnLoadPlayerDataSuccess, OnLoadPlayerDataFailure);
+    }
+
+    private void OnLoadPlayerDataSuccess(GetUserDataResult result)
+    {
+        if (result.Data.TryGetValue("PlayerName", out var playerName) &&
+            result.Data.TryGetValue("PlayerScore", out var playerScore))
+        {
+            Debug.Log("Player Name: " + playerName.Value);
+            Debug.Log("Player Score: " + playerScore.Value);
+        }
+        else
+        {
+            Debug.Log("Player data not found");
+        }
+    }
+
+    private void OnLoadPlayerDataFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to load player data: " + error.ErrorMessage);
+    }
+
+}
+
+5. In game chat :
+
+using PlayFab;
+using PlayFab.ClientModels;
+
+public class ChatManager : MonoBehaviourPunCallbacks
+{
+public void SendChatMessage(string message)
+{
+// Send the chat message using Photon's network synchronization
+photonView.RPC("ReceiveChatMessage", RpcTarget.All, message);
+}
+
+    [PunRPC]
+    private void ReceiveChatMessage(string message, PhotonMessageInfo info)
+    {
+        // Handle the received chat message
+        Debug.Log("Received chat message: " + message);
+
+        // Save the chat message to PlayFab for persistence
+        SaveChatMessageToPlayFab(message, info.Sender.UserId);
+    }
+
+    private void SaveChatMessageToPlayFab(string message, string senderId)
+    {
+        var request = new UpdateUserDataRequest
+        {
+            Data = new Dictionary<string, string>
+            {
+                { "ChatMessage", message },
+                { "SenderId", senderId }
+            }
+        };
+
+        PlayFabClientAPI.UpdateUserData(request, OnSaveChatMessageSuccess, OnSaveChatMessageFailure);
+    }
+
+    private void OnSaveChatMessageSuccess(UpdateUserDataResult result)
+    {
+        Debug.Log("Chat message saved successfully");
+    }
+
+    private void OnSaveChatMessageFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to save chat message: " + error.ErrorMessage);
+    }
+
+}
+
+6. Matchmaking
+   using Photon.Pun;
+   using Photon.Realtime;
+
+public class MatchmakingManager : MonoBehaviourPunCallbacks
+{
+public void StartMatchmaking()
+{
+PhotonNetwork.ConnectUsingSettings();
+}
+
+    public override void OnConnectedToMaster()
+    {
+        PhotonNetwork.JoinRandomRoom();
+    }
+
+    public override void OnJoinRandomFailed(short returnCode, string message)
+    {
+        CreateRoom();
+    }
+
+    private void CreateRoom()
+    {
+        string roomName = "Room" + Random.Range(1000, 9999);
+        PhotonNetwork.CreateRoom(roomName);
+    }
+
+    public override void OnJoinedRoom()
+    {
+        Debug.Log("Joined room: " + PhotonNetwork.CurrentRoom.Name);
+    }
+
+}
+
+
+6. Coins system
+   using PlayFab;
+   using PlayFab.ClientModels;
+
+public class CoinManager : MonoBehaviour
+{
+public void AddCoins(int amount)
+{
+var request = new AddUserVirtualCurrencyRequest
+{
+VirtualCurrency = "CO",
+Amount = amount
+};
+
+        PlayFabClientAPI.AddUserVirtualCurrency(request, OnAddCoinsSuccess, OnAddCoinsFailure);
+    }
+
+    private void OnAddCoinsSuccess(ModifyUserVirtualCurrencyResult result)
+    {
+        Debug.Log("Coins added successfully");
+    }
+
+    private void OnAddCoinsFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to add coins: " + error.ErrorMessage);
+    }
+
+    public void GetCoins()
+    {
+        var request = new GetUserInventoryRequest();
+
+        PlayFabClientAPI.GetUserInventory(request, OnGetCoinsSuccess, OnGetCoinsFailure);
+    }
+
+    private void OnGetCoinsSuccess(GetUserInventoryResult result)
+    {
+        Debug.Log("Coins: " + result.VirtualCurrency["CO"]);
+    }
+
+    private void OnGetCoinsFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to get coins: " + error.ErrorMessage);
+    }
+
+}
+
+7. Daily fortune wheel and notifications
+   using PlayFab;
+   using PlayFab.ClientModels;
+
+
+public class DailyFortuneWheel : MonoBehaviour
+{
+public void SpinWheel()
+{
+var request = new ExecuteCloudScriptRequest
+{
+FunctionName = "SpinWheel",
+FunctionParameter = new { }
+};
+
+        PlayFabClientAPI.ExecuteCloudScript(request, OnSpinWheelSuccess, OnSpinWheelFailure);
+    }
+
+    private void OnSpinWheelSuccess(ExecuteCloudScriptResult result)
+    {
+        if (result.FunctionResult != null)
+        {
+            Debug.Log("Fortune wheel spin result: " + result.FunctionResult);
+        }
+        else
+        {
+            Debug.Log("Failed to spin fortune wheel");
+        }
+    }
+
+    private void OnSpinWheelFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to spin fortune wheel: " + error.ErrorMessage);
+    }
+
+}
+
+7. Online status for your friends
+   using PlayFab;
+   using PlayFab.ClientModels;
+
+public class FriendManager : MonoBehaviour
+{
+public void SetOnlineStatus(bool isOnline)
+{
+var request = new UpdateUserTitleDisplayNameRequest
+{
+DisplayName = isOnline ? "Online" : "Offline"
+};
+
+        PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnSetOnlineStatusSuccess, OnSetOnlineStatusFailure);
+    }
+
+    private void OnSetOnlineStatusSuccess(UpdateUserTitleDisplayNameResult result)
+    {
+        Debug.Log("Online status updated successfully");
+    }
+
+    private void OnSetOnlineStatusFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to update online status: " + error.ErrorMessage);
+    }
+
+    public void GetOnlineStatus()
+    {
+        var request = new GetPlayerProfileRequest();
+
+        PlayFabClientAPI.GetPlayerProfile(request, OnGetOnlineStatusSuccess, OnGetOnlineStatusFailure);
+    }
+
+    private void OnGetOnlineStatusSuccess(GetPlayerProfileResult result)
+    {
+        Debug.Log("Online status: " + result.PlayerProfile.DisplayName);
+    }
+
+    private void OnGetOnlineStatusFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to get online status: " + error.ErrorMessage);
+    }
+
+}
+
+
+8. Shop – buy new chat, emoji
+   using PlayFab;
+   using PlayFab.ClientModels;
+
+public class ShopManager : MonoBehaviour
+{
+
+public void BuyItem(string itemId)
+{
+var request = new PurchaseItemRequest
+{
+ItemId = itemId,
+VirtualCurrency = "CO",
+Price = 100
+};
+
+        PlayFabClientAPI.PurchaseItem(request, OnBuyItemSuccess, OnBuyItemFailure);
+    }
+
+    private void OnBuyItemSuccess(PurchaseItemResult result)
+    {
+        Debug.Log("Item purchased successfully");
+    }
+
+    private void OnBuyItemFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to purchase item: " + error.ErrorMessage);
+    }
+
+}
+
+9. Session Management
+   using PlayFab;
+   using PlayFab.ClientModels;
+
+public class SessionManager : MonoBehaviour
+{
+public void StartSession()
+{
+var request = new StartGameRequest
+{
+BuildVersion = "1.0",
+GameMode = "PvP",
+Region = "US"
+};
+
+        PlayFabClientAPI.StartGame(request, OnStartSessionSuccess, OnStartSessionFailure);
+    }
+
+    private void OnStartSessionSuccess(StartGameResult result)
+    {
+        Debug.Log("Session started successfully");
+    }
+
+    private void OnStartSessionFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to start session: " + error.ErrorMessage);
+    }
+
+    public void EndSession()
+    {
+        var request = new EndGameRequest
+        {
+            BuildVersion = "1.0",
+            GameMode = "PvP",
+            Region = "US"
+        };
+
+        PlayFabClientAPI.EndGame(request, OnEndSessionSuccess, OnEndSessionFailure);
+    }
+
+    private void OnEndSessionSuccess(EndGameResult result)
+    {
+        Debug.Log("Session ended successfully");
+    }
+
+    private void OnEndSessionFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to end session: " + error.ErrorMessage);
+    }
+
+}
+
+10.
+using UnityEngine;
+using PlayFab;
+using PlayFab.MultiplayerModels;
+
+public class SessionManager : MonoBehaviour
+{
+    // Initialize PlayFab settings
+    private void Start()
+    {
+        PlayFabSettings.TitleId = "YOUR_TITLE_ID";
+        PlayFabSettings.DeveloperSecretKey = "YOUR_SECRET_KEY";
+    }
+
+    // Authenticate player and create a game session
+    public void CreateGameSession()
+    {
+        // Authenticate player (you need to implement this)
+        // Authentication might involve PlayFab login or custom authentication methods
+
+        // Define session properties
+        CreateBuildWithManagedContainerRequest request = new CreateBuildWithManagedContainerRequest
+        {
+            SessionCookie = "SESSION_COOKIE",
+            BuildName = "MyGameBuild",
+            // Add other session properties as needed
+        };
+
+        // Use PlayFab's multiplayer API to create a game session
+        PlayFabMultiplayerAPI.CreateBuildWithManagedContainer(request, OnCreateGameSession, OnPlayFabError);
+    }
+
+    // Callback for when the game session is created successfully
+    private void OnCreateGameSession(CreateBuildWithManagedContainerResponse result)
+    {
+        // Retrieve the session ID from the result
+        string sessionId = result.BuildId;
+
+        // Use the session ID to connect players to the game session (you need to implement this)
+    }
+
+    // Callback for PlayFab API errors
+    private void OnPlayFabError(PlayFabError error)
+    {
+        Debug.LogError("PlayFab API Error: " + error.GenerateErrorReport());
+    }
+}
