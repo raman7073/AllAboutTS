@@ -74,7 +74,7 @@ area(square); // 64
 // Definetely we can use Interface here but there are 2 reasons to use of class
 // 1. LSP is about parent and child relationship and we are using abstract class here
 // 2. In future we can have static methods in PaymentProcessor class that can be used directly from PaymentProcessor class
-abstract class PaymentProcessor {
+abstract class PaymentProcessor1 {
   abstract processPayment(amount: number): void;
   static validatePayment(amount: number): boolean {
     if (amount > 0) {
@@ -84,27 +84,27 @@ abstract class PaymentProcessor {
   }
 }
 
-class DebitCard extends PaymentProcessor {
+class DebitCard extends PaymentProcessor1 {
   public processPayment(amount: number): void {
-    PaymentProcessor.validatePayment(amount);
+    PaymentProcessor1.validatePayment(amount);
     console.log('Processing payment using Debit Card');
   }
 }
 
-class CreditCard extends PaymentProcessor {
+class CreditCard extends PaymentProcessor1 {
   public processPayment(amount: number): void {
     console.log('Processing payment using Credit Card');
   }
 }
 
-class Paypal extends PaymentProcessor {
+class Paypal extends PaymentProcessor1 {
   public processPayment(amount: number): void {
     console.log('Processing payment using Paypal');
   }
 }
 
 // ====== Client Code
-function processPayment(paymentProcessor: PaymentProcessor, amount: number) {
+function processPayment(paymentProcessor: PaymentProcessor1, amount: number) {
   paymentProcessor.processPayment(amount);
 }
 

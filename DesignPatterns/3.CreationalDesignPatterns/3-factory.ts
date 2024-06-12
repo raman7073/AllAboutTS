@@ -3,7 +3,8 @@
 
     Factory is a creational design pattern that provides an interface for creating objects in a superclass,
     but allows subclasses to alter the type of objects that will be created.
-
+    It surely avoid duplicacy. When we need objects at different places based on type
+    we don't need to write if else at those places.
 
 */
 /*
