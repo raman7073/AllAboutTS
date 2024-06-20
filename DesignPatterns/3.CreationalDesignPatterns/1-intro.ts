@@ -1,4 +1,5 @@
 /*
+  https://buihuycuong.medium.com/the-23-gang-of-four-design-patterns-974ae8d1a957
   Introduction to Creational Design Patterns:
 
    Creational design patterns in object-oriented programming deal with object creation mechanisms, 
